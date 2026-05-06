@@ -1,0 +1,201 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* ─── THÈME SOMBRE ────────────────────────────────────────── */
+  :root, .dark {
+    --color-bg-primary: #0a0a0a;
+    --color-bg-secondary: #141414;
+    --color-bg-card: #1a1a1a;
+    --color-bg-card-highlight: #1f1f1f;
+    --color-bg-input: #1e1e1e;
+    --color-bg-hover: #282828;
+
+    --color-border: rgba(255, 255, 255, 0.1);
+    --color-border-highlight: rgba(255, 255, 255, 0.25);
+    --color-border-input: rgba(255, 255, 255, 0.18);
+
+    --color-text-primary: #f0f0f0;
+    --color-text-secondary: #b0b0b0;
+    --color-text-muted: #787878;
+    --color-text-faint: #505050;
+    --color-text-inverse: #0a0a0a;
+
+    --color-brand: #f0f0f0;
+    --color-brand-hover: #ffffff;
+    --color-brand-muted: rgba(255, 255, 255, 0.07);
+    --color-brand-text: #f0f0f0;
+
+    --color-focus-ring: rgba(255, 255, 255, 0.18);
+
+    --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+    --shadow-glow: 0 0 0 1px rgba(255, 255, 255, 0.06);
+
+    --color-scrollbar-track: #141414;
+    --color-scrollbar-thumb: #3a3a3a;
+    --color-scrollbar-thumb-hover: #4a4a4a;
+    --color-slider-track: #3a3a3a;
+
+    color-scheme: dark;
+  }
+
+  /* ─── THÈME CLAIR ─────────────────────────────────────────── */
+  .light {
+    --color-bg-primary: #ffffff;
+    --color-bg-secondary: #f5f5f5;
+    --color-bg-card: #ffffff;
+    --color-bg-card-highlight: #f9f9f9;
+    --color-bg-input: #f3f3f3;
+    --color-bg-hover: #ebebeb;
+
+    --color-border: #e2e2e2;
+    --color-border-highlight: #111111;
+    --color-border-input: #d0d0d0;
+
+    --color-text-primary: #0a0a0a;
+    --color-text-secondary: #3a3a3a;
+    --color-text-muted: #6b6b6b;
+    --color-text-faint: #9e9e9e;
+    --color-text-inverse: #ffffff;
+
+    --color-brand: #0a0a0a;
+    --color-brand-hover: #282828;
+    --color-brand-muted: #ebebeb;
+    --color-brand-text: #0a0a0a;
+
+    --color-focus-ring: rgba(0, 0, 0, 0.12);
+
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.07);
+    --shadow-glow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    --color-scrollbar-track: #f0f0f0;
+    --color-scrollbar-thumb: #c8c8c8;
+    --color-scrollbar-thumb-hover: #aaaaaa;
+    --color-slider-track: #d5d5d5;
+
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--color-scrollbar-track); }
+  ::-webkit-scrollbar-thumb { background: var(--color-scrollbar-thumb); border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-scrollbar-thumb-hover); }
+}
+
+@layer components {
+  /* ─── CARDS ──────────────────────────────────────────────── */
+  .card {
+    @apply backdrop-blur-sm rounded-2xl p-6;
+    background-color: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-card);
+  }
+
+  .card-highlight {
+    @apply backdrop-blur-sm rounded-2xl p-6;
+    background-color: var(--color-bg-card-highlight);
+    border: 1px solid var(--color-border-highlight);
+    box-shadow: var(--shadow-glow);
+  }
+
+  /* ─── INPUTS ─────────────────────────────────────────────── */
+  .input-label {
+    @apply text-sm font-medium;
+    color: var(--color-text-secondary);
+  }
+
+  .input-field {
+    @apply w-full rounded-xl px-3 py-2.5 text-sm transition-all duration-200;
+    background-color: var(--color-bg-input);
+    border: 1px solid var(--color-border-input);
+    color: var(--color-text-primary);
+  }
+
+  .input-field:focus {
+    outline: none;
+    border-color: var(--color-brand);
+    box-shadow: 0 0 0 3px var(--color-focus-ring);
+  }
+
+  .input-field::-webkit-outer-spin-button,
+  .input-field::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .input-field[type='number'] {
+    -moz-appearance: textfield;
+  }
+
+  /* ─── RANGE SLIDER ───────────────────────────────────────── */
+  input[type='range'] {
+    @apply appearance-none w-full h-1.5 rounded-lg cursor-pointer;
+    background-color: var(--color-slider-track);
+  }
+
+  input[type='range']::-webkit-slider-thumb {
+    @apply appearance-none w-4 h-4 rounded-full cursor-pointer;
+    background-color: var(--color-brand);
+    transition: box-shadow 0.15s ease;
+  }
+
+  input[type='range']::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 0 4px var(--color-focus-ring);
+  }
+
+  input[type='range']::-moz-range-thumb {
+    @apply w-4 h-4 rounded-full cursor-pointer border-0;
+    background-color: var(--color-brand);
+  }
+
+  /* ─── THEME TOGGLE ───────────────────────────────────────── */
+  .theme-toggle {
+    @apply w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer;
+    background-color: var(--color-bg-hover);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-muted);
+  }
+
+  .theme-toggle:hover {
+    color: var(--color-brand);
+    border-color: var(--color-brand);
+  }
+
+  /* ─── TEXT UTILITIES ─────────────────────────────────────── */
+  .text-heading { color: var(--color-text-primary); }
+  .text-body    { color: var(--color-text-secondary); }
+  .text-muted   { color: var(--color-text-muted); }
+  .text-faint   { color: var(--color-text-faint); }
+  .text-brand   { color: var(--color-brand-text); }
+}
+
+@layer utilities {
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
+  }
+
+  @keyframes countUp {
+    from { opacity: 0; transform: scale(0.96); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .animate-count-up {
+    animation: countUp 0.5s ease-out forwards;
+  }
+}

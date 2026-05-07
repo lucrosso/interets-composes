@@ -377,14 +377,16 @@ export default function App() {
   const [duree,            setDuree]            = useState(20);
 
   // ── Scénario actuel ──
-  const [modeActuel,    setModeActuel]    = useState('libre');
-  const [tauxActuel,    setTauxActuel]    = useState(2.5);
-  const [weightsActuel, setWeightsActuel] = useState(DEFAULT_WEIGHTS_ACTUEL);
+  const [modeActuel,       setModeActuel]       = useState('libre');
+  const [tauxActuel,       setTauxActuel]       = useState(2.5);
+  const [weightsActuel,    setWeightsActuel]    = useState(DEFAULT_WEIGHTS_ACTUEL);
+  const [fraisActuel,      setFraisActuel]      = useState(0);
 
   // ── Scénario optimisé ──
-  const [modeOptimise,    setModeOptimise]    = useState('libre');
-  const [tauxOptimise,    setTauxOptimise]    = useState(6.0);
-  const [weightsOptimise, setWeightsOptimise] = useState(DEFAULT_WEIGHTS_OPTIMISE);
+  const [modeOptimise,     setModeOptimise]     = useState('libre');
+  const [tauxOptimise,     setTauxOptimise]     = useState(6.0);
+  const [weightsOptimise,  setWeightsOptimise]  = useState(DEFAULT_WEIGHTS_OPTIMISE);
+  const [fraisOptimise,    setFraisOptimise]    = useState(0);
 
   // Taux effectifs selon le mode sélectionné
   const effectiveTauxActuel   = modeActuel   === 'libre' ? tauxActuel   : calcWeightedReturn(weightsActuel);
@@ -392,14 +394,17 @@ export default function App() {
 
   // ── Données du graphique ──
   const chartData = useMemo(() => {
-    const computeCapital = (taux, n) => {
-      // Taux mensuel équivalent (fonctionne pour les taux négatifs aussi)
+    // Les frais d'entrée réduisent le capital investi et chaque versement
+    const computeCapital = (taux, frais, n) => {
+      const coeff = 1 - frais / 100;
       const r = Math.pow(1 + taux / 100, 1 / 12) - 1;
-      const capitalCompound = capitalInitial * Math.pow(1 + r, n);
+      const capitalNet = capitalInitial * coeff;
+      const versementNet = versementMensuel * coeff;
+      const capitalCompound = capitalNet * Math.pow(1 + r, n);
       // Formule des rentes valable pour r > 0, r < 0, et r ≈ 0
       const annuityFV = r !== 0
-        ? versementMensuel * (Math.pow(1 + r, n) - 1) / r
-        : versementMensuel * n;
+        ? versementNet * (Math.pow(1 + r, n) - 1) / r
+        : versementNet * n;
       return Math.round(capitalCompound + annuityFV);
     };
     return Array.from({ length: duree + 1 }, (_, year) => {
@@ -407,11 +412,11 @@ export default function App() {
       return {
         year,
         investi:  Math.round(capitalInitial + versementMensuel * n),
-        actuel:   computeCapital(effectiveTauxActuel,   n),
-        optimise: computeCapital(effectiveTauxOptimise, n),
+        actuel:   computeCapital(effectiveTauxActuel,   fraisActuel,   n),
+        optimise: computeCapital(effectiveTauxOptimise, fraisOptimise, n),
       };
     });
-  }, [capitalInitial, versementMensuel, duree, effectiveTauxActuel, effectiveTauxOptimise]);
+  }, [capitalInitial, versementMensuel, duree, effectiveTauxActuel, effectiveTauxOptimise, fraisActuel, fraisOptimise]);
 
   const final          = chartData[chartData.length - 1] ?? { investi: 0, actuel: 0, optimise: 0 };
   const gainsActuel    = final.actuel   - final.investi;
@@ -494,7 +499,7 @@ export default function App() {
                   Saisissez le rendement net annuel réel (après inflation et frais). Un taux négatif illustre
                   l'érosion de l'épargne par l'inflation.
                 </p>
-                {/* Alerte inflation : s'affiche quand le taux est négatif */}
+                {/* Alerte inflation */}
                 {tauxActuel < 0 && (
                   <div className="flex items-center gap-2 text-xs px-3 py-2 rounded-lg mb-4"
                        style={{ backgroundColor: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.25)', color: '#f87171' }}>
@@ -516,6 +521,18 @@ export default function App() {
                 <AllocationPanel weights={weightsActuel} onChange={setWeightsActuel} />
               </>
             )}
+            {/* Frais d'entrée — commun aux deux modes */}
+            <div className="mt-5 pt-5" style={{ borderTop: '1px solid var(--color-border)' }}>
+              <Slider label="Frais d'entrée" value={fraisActuel} onChange={setFraisActuel}
+                      min={0} max={5} step={0.1} suffix="%" />
+              {fraisActuel > 0 && (
+                <p className="text-xs mt-2" style={{ color: 'var(--color-text-faint)' }}>
+                  Soit <strong style={{ color: 'var(--color-text-muted)' }}>
+                    {fmt((capitalInitial + versementMensuel * duree * 12) * fraisActuel / 100)}
+                  </strong> de frais sur la durée totale
+                </p>
+              )}
+            </div>
           </div>
 
           {/* ── Scénario optimisé ── La carte se distingue visuellement par sa bordure card-highlight ── */}
@@ -544,6 +561,18 @@ export default function App() {
                 <AllocationPanel weights={weightsOptimise} onChange={setWeightsOptimise} />
               </>
             )}
+            {/* Frais d'entrée — commun aux deux modes */}
+            <div className="mt-5 pt-5" style={{ borderTop: '1px solid var(--color-border)' }}>
+              <Slider label="Frais d'entrée" value={fraisOptimise} onChange={setFraisOptimise}
+                      min={0} max={5} step={0.1} suffix="%" />
+              {fraisOptimise > 0 && (
+                <p className="text-xs mt-2" style={{ color: 'var(--color-text-faint)' }}>
+                  Soit <strong style={{ color: 'var(--color-text-muted)' }}>
+                    {fmt((capitalInitial + versementMensuel * duree * 12) * fraisOptimise / 100)}
+                  </strong> de frais sur la durée totale
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -610,6 +639,11 @@ export default function App() {
                       color={gainsActuel >= 0 ? colors.optimised : colors.actual} />
               <Metric label="Capital investi" value={fmt(final.investi)} />
               <Metric label="Multiplication"  value={fmtMultiple(final.actuel, final.investi)} />
+              {fraisActuel > 0 && (
+                <Metric label="Frais d'entrée payés"
+                        value={'−' + fmt(final.investi * fraisActuel / 100)}
+                        color={colors.actual} />
+              )}
             </div>
           </div>
 
@@ -630,6 +664,11 @@ export default function App() {
               <Metric label="Capital investi" value={fmt(final.investi)} />
               <Metric label="Multiplication"  value={fmtMultiple(final.optimise, final.investi)}
                       color={colors.optimised} />
+              {fraisOptimise > 0 && (
+                <Metric label="Frais d'entrée payés"
+                        value={'−' + fmt(final.investi * fraisOptimise / 100)}
+                        color={colors.actual} />
+              )}
             </div>
           </div>
         </div>
@@ -640,7 +679,7 @@ export default function App() {
             <p className="text-sm mb-2" style={{ color: 'var(--color-text-muted)' }}>
               Gain de l'optimisation sur {duree} an{duree > 1 ? 's' : ''}
             </p>
-            <p className="text-5xl font-bold mb-2 animate-count-up text-heading">+{fmt(avantage)}</p>
+            <p className="text-5xl font-bold mb-2 animate-count-up" style={{ color: colors.optimised }}>+{fmt(avantage)}</p>
             <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
               de capital supplémentaire grâce à l'optimisation {BRAND_NAME}
             </p>

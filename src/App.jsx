@@ -296,24 +296,43 @@ function TRow({ label, value, color, bold }) {
 }
 
 // ─── LÉGENDE DU GRAPHIQUE ────────────────────────────────────────────────────
-function ChartLegend({ colors }) {
+// Légende interactive : clic pour afficher/masquer chaque série
+function ChartLegend({ colors, visible, onToggle }) {
   const items = [
-    { color: 'var(--color-text-faint)', label: 'Capital investi',    dashed: true },
-    { color: colors.actual,             label: 'Situation actuelle' },
-    { color: colors.optimised,          label: 'Situation optimisée' },
+    { key: 'investi',  color: 'var(--color-text-faint)', label: 'Capital investi',    dashed: true },
+    { key: 'actuel',   color: colors.actual,             label: 'Situation actuelle' },
+    { key: 'optimise', color: colors.optimised,          label: 'Situation optimisée' },
   ];
   return (
     <div className="flex flex-wrap justify-center gap-5 mt-4">
-      {items.map(item => (
-        <div key={item.label} className="flex items-center gap-2">
-          <svg width="22" height="10" className="flex-shrink-0">
-            <line x1="0" y1="5" x2="22" y2="5" stroke={item.color}
-                  strokeWidth={item.dashed ? 1.5 : 2}
-                  strokeDasharray={item.dashed ? '4 3' : undefined} />
-          </svg>
-          <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{item.label}</span>
-        </div>
-      ))}
+      {items.map(item => {
+        const isVisible = visible[item.key];
+        return (
+          <button key={item.key} onClick={() => onToggle(item.key)}
+                  className="flex items-center gap-2 transition-opacity duration-200"
+                  style={{ opacity: isVisible ? 1 : 0.35, cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}>
+            <svg width="22" height="10" className="flex-shrink-0">
+              {/* Ligne barrée quand masquée */}
+              <line x1="0" y1="5" x2="22" y2="5"
+                    stroke={item.color}
+                    strokeWidth={item.dashed ? 1.5 : 2}
+                    strokeDasharray={item.dashed ? '4 3' : undefined} />
+              {!isVisible && (
+                <line x1="0" y1="5" x2="22" y2="5"
+                      stroke="var(--color-text-faint)" strokeWidth={1}
+                      strokeDasharray="2 2" />
+              )}
+            </svg>
+            <span className="text-xs select-none"
+                  style={{
+                    color: isVisible ? 'var(--color-text-muted)' : 'var(--color-text-faint)',
+                    textDecoration: isVisible ? 'none' : 'line-through',
+                  }}>
+              {item.label}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -387,6 +406,10 @@ export default function App() {
   const [tauxOptimise,     setTauxOptimise]     = useState(6.0);
   const [weightsOptimise,  setWeightsOptimise]  = useState(DEFAULT_WEIGHTS_OPTIMISE);
   const [fraisOptimise,    setFraisOptimise]    = useState(0);
+
+  // ── Visibilité des courbes (légende interactive) ──
+  const [visible, setVisible] = useState({ investi: true, actuel: true, optimise: true });
+  const toggleSeries = (key) => setVisible(v => ({ ...v, [key]: !v[key] }));
 
   // Taux effectifs selon le mode sélectionné
   const effectiveTauxActuel   = modeActuel   === 'libre' ? tauxActuel   : calcWeightedReturn(weightsActuel);
@@ -607,17 +630,23 @@ export default function App() {
                        tick={{ fill: 'var(--color-text-faint)', fontSize: 11 }}
                        axisLine={false} tickLine={false} tickFormatter={fmtAxis} width={52} />
                 <Tooltip content={renderTooltip} cursor={{ stroke: 'var(--color-border)', strokeWidth: 1 }} />
-                <Line type="monotone" dataKey="investi"
-                      stroke="var(--color-text-faint)" strokeWidth={1.5}
-                      strokeDasharray="5 3" dot={false} />
-                <Area type="monotone" dataKey="actuel"
-                      stroke={colors.actual} strokeWidth={2} fill="url(#gradActuel)" dot={false} />
-                <Area type="monotone" dataKey="optimise"
-                      stroke={colors.optimised} strokeWidth={2.5} fill="url(#gradOptimise)" dot={false} />
+                {visible.investi && (
+                  <Line type="monotone" dataKey="investi"
+                        stroke="var(--color-text-faint)" strokeWidth={1.5}
+                        strokeDasharray="5 3" dot={false} />
+                )}
+                {visible.actuel && (
+                  <Area type="monotone" dataKey="actuel"
+                        stroke={colors.actual} strokeWidth={2} fill="url(#gradActuel)" dot={false} />
+                )}
+                {visible.optimise && (
+                  <Area type="monotone" dataKey="optimise"
+                        stroke={colors.optimised} strokeWidth={2.5} fill="url(#gradOptimise)" dot={false} />
+                )}
               </ComposedChart>
             </ResponsiveContainer>
           </div>
-          <ChartLegend colors={colors} />
+          <ChartLegend colors={colors} visible={visible} onToggle={toggleSeries} />
         </div>
 
         {/* ━━━ RÉSULTATS ━━━ */}
